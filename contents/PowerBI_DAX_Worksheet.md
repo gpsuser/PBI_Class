@@ -342,8 +342,4 @@ By completing this worksheet, you should now understand:
 
 ---
 
-**Next Steps**: 
-- Review the solutions file to check your answers
-- Refer to the DAX Cheat Sheet for quick syntax reference
-- Practice creating additional calculated columns and measures
-- Explore more advanced DAX functions like FILTER, RANKX, and time intelligence
+

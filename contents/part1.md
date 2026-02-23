@@ -57,7 +57,7 @@ Product E	525
 ```
 
 
-### Using DAX Studio to "test" aggregation - use groupby to calculate total weight by city and product
+### Use DAX Studio to "test" aggregation: sum of weight by city  
 
 ```dax
 EVALUATE
@@ -70,12 +70,9 @@ SUMMARIZE(
         RELATED('weight'[Weight_grams])
     )
 )
-ORDER BY [Total Weight] DESC
 ```
 
-### Consider sorting in DAX 
-
-Example 1:
+### Sorting in DAX 
 
 ```dax
 EVALUATE
@@ -91,26 +88,52 @@ SUMMARIZE(
 ORDER BY [Total Weight] DESC
 
 ```
+
+### Use DAX Studio to "test" aggregation: sum of weight by city and product, sorted by city and total weight
+
+```dax
+EVALUATE
+SUMMARIZE(
+    'sales_data',
+    'sales_data'[City],
+    'sales_data'[Product],
+    "Total Weight", 
+    SUMX(
+        'sales_data',
+        RELATED('weight'[Weight_grams])
+    )
+)
+ORDER BY 'sales_data'[City], [Total Weight] DESC
+
+```
+
+![image.png](/img/weight_by_city_by_product.png)
 
 ### Creating and using measures in DAX
+
+A measure is a calculation that is performed on the data in your model. Measures are typically used to create aggregated values that can be used in visuals, such as sums, averages, counts, etc.
 
 Example 1: Create a measure to calculate total weight
 
 ```dax
-Total Weight = 
+msr_Total_Weight = 
 SUMX(
     'sales_data',
     RELATED('weight'[Weight_grams])
 )
 
 ```
-Example 2: Use the measure in a visual
+
+![image.png](/img/msr_total_weight.png)
+
+Use the measure in a visual:
+
 1. Create a table visual in Power BI
 2. Add `City` from `sales_data` to the rows
-3. Add the `Total Weight` measure to the values
-4. Sort the table by `Total Weight` in descending order
+3. Add the `msr_Total_Weight` measure to the values
+4. Sort the table by `msr_Total_Weight` in descending order
 
-Example 3: Create a measure to calculate average weight per item
+Example 2: Create a measure to calculate average weight per item
 
 ```dax
 Average Weight per Item =
@@ -120,27 +143,39 @@ DIVIDE(
 )
 ```
 
-Example 4: Use the average weight measure in a visual
+Use the average weight measure in a visual:
+
 1. Create a table visual in Power BI
 2. Add `City` from `sales_data` to the rows
 3. Add the `Average Weight per Item` measure to the values
 4. Sort the table by `Average Weight per Item` in descending order
 
 
+### Working with AI to help with DAX code generation
 
-## Extra content
+Prompt: "Write a DAX measure to calculate the total weight of products sold, using the 'weight' table to get the weight of each product and the 'sales_data' table to get the quantity sold."
 
-### Prompt for AI 
+```dax
+Total Weight =
+SUMX(
+    'sales_data',
+    RELATED('weight'[Weight_grams]) * 'sales_data'[Items]
+)
+```
 
-```text
-I have two data sets - that I would to join on the "Product" column and then I would like to calculate the total "Weight" over all products by "city". Please generate the DAX code to do this for the following two tables  . The first table (sales_data) is attached to this chat session and here is the second table (weight): """  
-Product	Weight_grams
-Product A	115
-Product B	220
-Product C	3000
-Product D	410
-Product E	525  """
+Prompt: "Below is some dax code to sum total weight by city - how do i do this total sum of weight by city and product, given the attached screenshots for the two tables `weight` and `sales_data`?  Here is the initial dax: """ SUMMARIZE( 'sales_data', 'sales_data'[City], "Total Weight", SUMX( 'sales_data', RELATED('weight'[Weight_grams]) ) )  """ 
+"
 
-
-
+```dax
+EVALUATE
+SUMMARIZE(
+    'sales_data',
+    'sales_data'[City],
+    'sales_data'[Product],
+    "Total Weight", 
+    SUMX(
+        'sales_data',
+        RELATED('weight'[Weight_grams])
+    )
+)
 ```
