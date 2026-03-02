@@ -151,31 +151,5 @@ Use the average weight measure in a visual:
 4. Sort the table by `Average Weight per Item` in descending order
 
 
-### Working with AI to help with DAX code generation
 
-Prompt: "Write a DAX measure to calculate the total weight of products sold, using the 'weight' table to get the weight of each product and the 'sales_data' table to get the quantity sold."
-
-```dax
-Total Weight =
-SUMX(
-    'sales_data',
-    RELATED('weight'[Weight_grams]) * 'sales_data'[Items]
-)
-```
-
-Prompt: "Below is some dax code to sum total weight by city - how do i do this total sum of weight by city and product, given the attached screenshots for the two tables `weight` and `sales_data`?  Here is the initial dax: """ SUMMARIZE( 'sales_data', 'sales_data'[City], "Total Weight", SUMX( 'sales_data', RELATED('weight'[Weight_grams]) ) )  """ 
-"
-
-```dax
-EVALUATE
-SUMMARIZE(
-    'sales_data',
-    'sales_data'[City],
-    'sales_data'[Product],
-    "Total Weight", 
-    SUMX(
-        'sales_data',
-        RELATED('weight'[Weight_grams])
-    )
-)
 ```
