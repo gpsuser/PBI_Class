@@ -2,23 +2,6 @@
 
 ---
 
-## Table of Contents
-
-1. [Section 1: Introduction and Power BI Recap](#section-1-introduction-and-power-bi-recap)
-2. [Section 2: Dimensional Modelling Recap](#section-2-dimensional-modelling-recap)
-3. [Section 3: References vs Duplicates in Power Query](#section-3-references-vs-duplicates-in-power-query)
-4. [Section 4: Table Joins](#section-4-table-joins)
-5. [Section 5: Creating Dimension Tables](#section-5-creating-dimension-tables)
-6. [Section 6: Enriching a Dimension Table with a Merge (Join)](#section-6-enriching-a-dimension-table-with-a-merge-join)
-7. [Section 7: Creating the Fact Table and Merging Foreign Keys](#section-7-creating-the-fact-table-and-merging-foreign-keys)
-8. [Section 8: Organising and Hiding Source Data](#section-8-organising-and-hiding-source-data)
-9. [Section 9: Setting Up Relationships in Model View](#section-9-setting-up-relationships-in-model-view)
-10. [Section 10: Aggregation Inside the Dimensional Model Without DAX](#section-10-aggregation-inside-the-dimensional-model-without-dax)
-11. [Section 11: Introduction to M Language](#section-11-introduction-to-m-language)
-12. [Section 12: Conclusion and Further Resources](#section-12-conclusion-and-further-resources)
-
----
-
 ## Section 1: Introduction and Power BI Recap
 
 ### Overview
@@ -65,7 +48,6 @@ Power BI uses two distinct formula languages, each serving a different purpose:
 
 It is important not to confuse these two languages. M prepares data; DAX analyses it. This session covers both at an introductory level.
 
-[Back to Table of Contents](#table-of-contents)
 
 ---
 
@@ -137,8 +119,6 @@ The Star Schema gets its name from its visual appearance: a central fact table s
 
 In Power BI, relationships between tables are defined in the **Model View**, not inside the Power Query Editor. The Query Editor is used to prepare and shape the tables; the Model View is where you draw the connections between them using drag-and-drop.
 
-[Back to Table of Contents](#table-of-contents)
-
 ---
 
 ## Section 3: References vs Duplicates in Power Query
@@ -167,11 +147,6 @@ A **reference table** creates a live link back to the original (source) table.
 - Any steps applied in the original table (filtering rows, renaming columns, changing types) are automatically inherited by the reference table.
 - When the underlying data source (e.g., a CSV or Excel file) is updated and you refresh Power BI, the changes flow through the original table and then through all tables that reference it.
 - This is the correct choice when you want dimension and fact tables to stay in sync with the raw source.
-
-**How to create a reference:**
-```
-Power Query Editor > Right-click on Raw Data Table > Reference
-```
 
 ### Duplicates
 
@@ -204,7 +179,6 @@ To see the difference in action:
 
 If you had used a duplicate instead, the new row would not appear until you manually recreated the copy.
 
-[Back to Table of Contents](#table-of-contents)
 
 ---
 
@@ -312,337 +286,10 @@ Anti joins are useful for identifying missing or orphaned records, such as findi
 +------------------+-------------------------------------------+
 ```
 
-[Back to Table of Contents](#table-of-contents)
 
 ---
 
-## Section 5: Creating Dimension Tables
-
-### Overview
-
-In this section, you build all four dimension tables (DIM-region, DIM-customer, DIM-product, DIM-date) from a single raw data source using Power Query. Each follows a consistent pattern: reference the raw table, select relevant columns, remove duplicates, and add a surrogate key.
-
----
-
-### The General Pattern for Creating a Dimension Table
-
-Every dimension table is built using the same sequence of steps in the Power Query Editor:
-
-```
-1. Reference the Raw Data table
-2. Rename the reference table
-3. Choose (keep) only the relevant columns
-4. Remove duplicate rows on the key column
-5. Add an index column (starting from 1) to act as the surrogate key
-6. Reorder columns so the index column is first
-7. Close and Apply
-8. Rename the index column in Table View
-```
-
-This pattern keeps all dimension tables consistent and ensures they all stay linked to the raw data source via the reference relationship.
-
----
-
-### Creating DIM-region
-
-The DIM-region table holds geographic information about the cities where business takes place.
-
-**Steps:**
-
-1. Open the Power Query Editor: **Home > Transform Data > Transform Data**
-2. Right-click on **Raw Data** in the Queries pane and select **Reference**
-3. Right-click the new table (Raw Data (2)) and rename it **DIM-region**
-4. Keep only the relevant columns: **Home > Choose Columns** - select **City** and **Population Size**
-5. Remove duplicate cities: with **City** column selected, go to **Home > Remove Rows > Remove Duplicates**
-6. Add a surrogate key: **Add Column menu > Index Column > From 1**
-7. Drag the Index column to the front of the table
-8. Click **Home > Close and Apply**
-9. In **Table View**, right-click the Index column in DIM-region and rename it **id-region**
-
-**Sample output - DIM-region:**
-
-```
-+----------+-----------+------------------+
-| id-region | City      | Population Size  |
-+----------+-----------+------------------+
-|         1 | Bath      | 88,000           |
-|         2 | Bristol   | 470,000          |
-|         3 | Cork      | 210,000          |
-|         4 | Galway    | 80,000           |
-+----------+-----------+------------------+
-```
-
----
-
-### Creating DIM-customer
-
-The DIM-customer table holds descriptive information about each customer.
-
-**Relevant columns:** Customer, Age of Business, Service Tier
-
-**Steps** (same pattern as above, substituting the appropriate columns):
-
-1. Reference the Raw Data table and rename to **DIM-customer**
-2. Keep columns: **Customer**, **Age of Business**, **Service Tier**
-3. Remove duplicates on the **Customer** column
-4. Add an Index column from 1 and move it to the front
-5. Close and Apply, then rename the index to **id-customer**
-
-**Sample output - DIM-customer:**
-
-```
-+-------------+----------------------+------------------+--------------+
-| id-customer | Customer             | Age of Business  | Service Tier |
-+-------------+----------------------+------------------+--------------+
-|           1 | Acme Corp            | 12               | Gold         |
-|           2 | Brendan Ltd          | 4                | Silver       |
-|           3 | Clancy Supplies      | 7                | Bronze       |
-+-------------+----------------------+------------------+--------------+
-```
-
----
-
-### Creating DIM-product
-
-The DIM-product table holds descriptive information about products sold.
-
-**Relevant columns:** Product
-
-**Steps:**
-
-1. Reference Raw Data and rename to **DIM-product**
-2. Keep column: **Product**
-3. Remove duplicates on **Product** column
-4. Add Index from 1, move to front
-5. Close and Apply, rename index to **id-product**
-
-**Sample output - DIM-product:**
-
-```
-+------------+------------------+
-| id-product | Product          |
-+------------+------------------+
-|          1 | Widget A         |
-|          2 | Widget B         |
-|          3 | Service Package  |
-+------------+------------------+
-```
-
----
-
-### Creating DIM-date
-
-The DIM-date table holds the unique dates that appear in the transaction data. In more advanced models this table is often enriched with year, month, quarter, and day-of-week columns, but for now it holds unique transaction dates and a surrogate key.
-
-**Relevant columns:** Data Date
-
-**Steps:**
-
-1. Reference Raw Data and rename to **DIM-date**
-2. Keep column: **Data Date**
-3. Remove duplicates on **Data Date** column
-4. Add Index from 1, move to front
-5. Close and Apply, rename index to **id-date**
-
-**Sample output - DIM-date:**
-
-```
-+---------+------------+
-| id-date | Data Date  |
-+---------+------------+
-|       1 | 01/01/2024 |
-|       2 | 02/01/2024 |
-|       3 | 05/01/2024 |
-+---------+------------+
-```
-
----
-
-### Why Use a Surrogate Key?
-
-A surrogate key (the id column added via the index) is an integer that uniquely identifies each row in a dimension table. It is preferred over using a natural key (like the city name or product name) because:
-
-- Natural keys can change (a product may be renamed)
-- Natural keys can be duplicated across systems
-- Integer surrogate keys are more efficient for join operations
-- They decouple the data model from the source system's naming conventions
-
-[Back to Table of Contents](#table-of-contents)
-
----
-
-## Section 6: Enriching a Dimension Table with a Merge (Join)
-
-### Overview
-
-Sometimes a dimension table needs information that is not in the raw data table but exists in a separate reference file. In this section, you learn how to bring in additional data by merging (joining) a secondary table into an existing dimension table using a Left Outer Join.
-
----
-
-### The Scenario
-
-The DIM-region table currently contains City and Population Size. You want to also know which State each city belongs to. This information is stored in a separate file: **City State.csv**.
-
-### Step 1 - Import the City State file
-
-1. In Power Query Editor: **Home > Get Data > Text/CSV**
-2. Navigate to and open **City State.csv** then click **Transform**
-3. Use **Use First Row as Headers** to promote the header row
-4. Remove any blank rows: **Home > Remove Rows > Remove Blank Rows**
-5. Click **Close and Apply**
-
-**Sample City State table:**
-
-```
-+---------+----------+
-| City    | State    |
-+---------+----------+
-| Bath    | England  |
-| Bristol | England  |
-| Cork    | Ireland  |
-| Galway  | Ireland  |
-+---------+----------+
-```
-
-### Step 2 - Merge City State into DIM-region
-
-1. In the Queries pane, select **DIM-region**
-2. Go to **Home > Merge Queries**
-3. In the Merge window:
-   - For the DIM-region table, select the **City** column
-   - In the dropdown, choose the **City State** table
-   - Select the **City** column in the City State table
-   - Set Join Kind to **Left Outer** (all from DIM-region, matching from City State)
-4. Click **OK**
-5. A new column appears in DIM-region. Click the expand icon (two diverging arrows) on the City State column header.
-6. Select only **State** and deselect "Use original column name as prefix"
-7. Click **OK**
-
-### Step 3 - Rename and Tidy Up
-
-Do not keep a duplicate City column from the merge. Rename the State column if necessary:
-
-In **Table View**, right-click **City State.State** and rename it to **State**.
-
-**Sample output - DIM-region (enriched):**
-
-```
-+----------+-----------+------------------+---------+
-| id-region | City      | Population Size  | State   |
-+----------+-----------+------------------+---------+
-|         1 | Bath      | 88,000           | England |
-|         2 | Bristol   | 470,000          | England |
-|         3 | Cork      | 210,000          | Ireland |
-|         4 | Galway    | 80,000           | Ireland |
-+----------+-----------+------------------+---------+
-```
-
-### Why Left Outer Here?
-
-A Left Outer Join is chosen because you want to keep every city in DIM-region, even if (for some reason) it has no matching record in the City State file. Using an Inner Join would silently drop any unmatched cities, which could result in missing data.
-
-[Back to Table of Contents](#table-of-contents)
-
----
-
-## Section 7: Creating the Fact Table and Merging Foreign Keys
-
-### Overview
-
-The fact table is the central table in the Star Schema. It stores the transactional records and references each dimension table via foreign keys. In this section, you build the FACT-sales table and bring in the surrogate keys from each dimension table using Merge operations.
-
----
-
-### Creating FACT-sales
-
-1. In Power Query Editor, right-click **Raw Data** and select **Reference**
-2. Rename the new table to **FACT-sales**
-
-At this point FACT-sales contains all the original raw columns. The goal is to:
-- Replace the descriptive columns (City, Customer, Product, Data Date) with the corresponding surrogate key integers from the dimension tables
-- Remove any columns that belong in dimension tables only
-
----
-
-### Merging id-product into FACT-sales
-
-1. With **FACT-sales** selected in the Queries pane, go to **Home > Merge Queries**
-2. In Merge window:
-   - Select the **Product** column in FACT-sales
-   - In the dropdown, choose **DIM-product**
-   - Select the **Product** column in DIM-product
-   - Join Kind: **Left Outer**
-3. Click **OK**
-4. Expand the DIM-product column - select only **id-product**, deselect "Use original column name as prefix"
-5. Remove the original **Product** column from FACT-sales (right-click > Remove Columns)
-
----
-
-### Merging id-customer into FACT-sales
-
-1. With **FACT-sales** selected, go to **Home > Merge Queries**
-2. In Merge window:
-   - Select the **Customer** column in FACT-sales
-   - Choose **DIM-customer** from the dropdown
-   - Select the **Customer** column in DIM-customer
-   - Join Kind: **Left Outer**
-3. Click **OK**
-4. Expand DIM-customer - select **id-customer** only, deselect prefix option
-5. Remove the original customer-related columns from FACT-sales: **Customer**, **Age of Business**, **Service Tier**
-
----
-
-### Merging id-region into FACT-sales
-
-1. With **FACT-sales** selected, go to **Home > Merge Queries**
-2. In Merge window:
-   - Select the **City** column in FACT-sales
-   - Choose **DIM-region** from the dropdown
-   - Select the **City** column in DIM-region
-   - Join Kind: **Left Outer**
-3. Click **OK**
-4. Expand DIM-region - select **id-region** only, deselect prefix option
-5. Remove the original region-related columns: **City**, **Population Size**
-
----
-
-### Merging id-date into FACT-sales
-
-1. With **FACT-sales** selected, go to **Home > Merge Queries**
-2. In Merge window:
-   - Select the **Data Date** column in FACT-sales
-   - Choose **DIM-date** from the dropdown
-   - Select the **Data Date** column in DIM-date
-   - Join Kind: **Left Outer**
-3. Click **OK**
-4. Expand DIM-date - select **id-date** only, deselect prefix option
-5. Remove the original **Data Date** column
-
----
-
-### Sample Output - FACT-sales (after all merges)
-
-```
-+------+----------+-------------+------------+---------+-------------+
-| Row  | id-region| id-customer | id-product | id-date | Total Spend |
-+------+----------+-------------+------------+---------+-------------+
-|    1 |        1 |           2 |          1 |       1 |      450.00 |
-|    2 |        3 |           1 |          3 |       2 |     1250.00 |
-|    3 |        2 |           3 |          2 |       1 |      300.00 |
-+------+----------+-------------+------------+---------+-------------+
-```
-
-Notice that FACT-sales now contains only numeric surrogate keys (the foreign keys) alongside the quantitative measure columns. All descriptive information has been moved to the appropriate dimension tables. This is the correct structure for a Star Schema.
-
-### Why Left Outer Join for the Fact Table?
-
-You use Left Outer Joins when bringing foreign keys into the fact table to ensure every transaction record is retained, even if there is a temporary mismatch. An Inner Join would silently drop any transaction rows that could not be matched, which could cause data to disappear without any error message.
-
-[Back to Table of Contents](#table-of-contents)
-
----
-
-## Section 8: Organising and Hiding Source Data
+## Section 5: Organising and Hiding Source Data
 
 ### Overview
 
@@ -694,11 +341,10 @@ Source tables should be hidden from report authors so they do not accidentally u
 
 Hidden tables remain available in the data model and the Power Query Editor, but they will not appear in the Fields pane when building reports. This prevents confusion and keeps the reporting experience clean.
 
-[Back to Table of Contents](#table-of-contents)
 
 ---
 
-## Section 9: Setting Up Relationships in Model View
+## Section 6: Setting Up Relationships in Model View
 
 ### Overview
 
@@ -757,99 +403,10 @@ Power BI uses the relationship direction to determine how filters flow. In a sta
 - Filters applied to a dimension (e.g., filtering by a specific region) flow downstream into the fact table, restricting which rows are aggregated.
 - This enables all of your measures and aggregations to automatically respond to slicers and filters in a report.
 
-[Back to Table of Contents](#table-of-contents)
 
 ---
 
-## Section 10: Aggregation Inside the Dimensional Model Without DAX
-
-### Overview
-
-Once the Star Schema is built, you can perform aggregations directly in Power Query using the Group By feature - without writing any DAX. This section demonstrates how to create a summary table (e.g., total sales by customer by product) entirely within the Power Query Editor.
-
----
-
-### Creating the Summary Table
-
-1. In Power Query Editor, right-click on **FACT-sales** and select **Reference**
-2. Rename the new table to **TotSalesByCustomerByProduct**
-
-### Applying a Group By Aggregation
-
-With **TotSalesByCustomerByProduct** selected:
-
-1. Select the **id-customer** column
-2. Go to **Transform tab > Group By**
-3. Switch to **Advanced** mode
-4. Add a second grouping column: click **Add Grouping** and select **id-product**
-5. Set up the aggregation:
-   - New column name: **Total Sales**
-   - Operation: **Sum**
-   - Column: **Total Spend**
-6. Click **OK**
-
-**Sample output before label merges:**
-
-```
-+-------------+------------+-------------+
-| id-customer | id-product | Total Sales |
-+-------------+------------+-------------+
-|           1 |          1 |      900.00 |
-|           1 |          2 |      450.00 |
-|           2 |          3 |     2100.00 |
-+-------------+------------+-------------+
-```
-
-### Bringing in Human-Readable Labels with Merges
-
-The summary table currently shows only surrogate keys. To make it useful for reporting, merge in the Customer and Product name columns.
-
-**Merge Customer name:**
-
-1. With **TotSalesByCustomerByProduct** selected, go to **Home > Merge Queries**
-2. Select **id-customer** column
-3. Choose **DIM-customer** from the dropdown, select **id-customer**
-4. Left Outer Join > OK
-5. Expand DIM-customer, select **Customer** only, deselect prefix option
-
-**Merge Product name:**
-
-1. Repeat the merge, this time selecting **id-product** in the summary table
-2. Choose **DIM-product**, select **id-product**
-3. Left Outer Join > OK
-4. Expand DIM-product, select **Product** only, deselect prefix option
-
-### Cleaning Up Columns
-
-1. Remove surrogate key columns: select **id-customer** and **id-product**, right-click and remove
-2. Move Customer and Product columns to the left: Select them, go to **Transform tab > Move > Left**
-3. Click **Home > Close and Apply**
-
-**Sample output - final summary table:**
-
-```
-+------------------+------------------+-------------+
-| Customer         | Product          | Total Sales |
-+------------------+------------------+-------------+
-| Acme Corp        | Widget A         |      900.00 |
-| Acme Corp        | Widget B         |      450.00 |
-| Brendan Ltd      | Service Package  |     2100.00 |
-+------------------+------------------+-------------+
-```
-
-### Handling Relationships for the Summary Table
-
-In Model View, the **TotSalesByCustomerByProduct** table should have its relationship connections removed or left disconnected because it is already a pre-aggregated summary and does not need to participate in the live dimensional model filtering. Delete any auto-created relationships for this table in the Model View.
-
-### Group By vs DAX Measures
-
-The Group By approach in Power Query produces a static pre-aggregated table. DAX measures, by contrast, calculate dynamically in response to whatever filters and slicers a report user applies. For interactive reporting, DAX measures are more flexible; for fixed summaries or exports, Power Query Group By is quicker to set up.
-
-[Back to Table of Contents](#table-of-contents)
-
----
-
-## Section 11: Introduction to M Language
+## Section 7: Introduction to M Language
 
 ### Overview
 
@@ -949,11 +506,10 @@ For most tasks in Power BI, you will not need to write M from scratch. The graph
 - It allows you to make precise edits that are difficult through the interface alone
 - It gives you insight into what Power BI is actually doing with your data at each step
 
-[Back to Table of Contents](#table-of-contents)
 
 ---
 
-## Section 12: Conclusion and Further Resources
+## Section 8: Conclusion and Further Resources
 
 ### Overview
 
@@ -1093,7 +649,6 @@ The following resources provide further depth on the topics covered in this sess
 - Microsoft Fabric and Power BI blog (official announcements and how-to articles):
   https://powerbi.microsoft.com/en-us/blog/
 
-[Back to Table of Contents](#table-of-contents)
 
 ---
 
